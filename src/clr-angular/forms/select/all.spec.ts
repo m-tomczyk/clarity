@@ -14,6 +14,7 @@ import {addHelpers} from "../../data/datagrid/helpers.spec";
 
 import OptionSpecs from "./option.spec";
 import OptionsSpecs from "./options.spec";
+import OptionSelectionProviderSpecs from "./providers/option-selection.service.spec";
 import SelectSpecs from "./select.spec";
 
 describe("Select component", function() {
@@ -23,5 +24,9 @@ describe("Select component", function() {
         SelectSpecs();
         OptionsSpecs();
         OptionSpecs();
+    });
+
+    describe("Providers", () => {
+        OptionSelectionProviderSpecs();
     });
 });
