@@ -25,23 +25,35 @@ export default function() {
         });
 
         it("updates the selection with the selected option", () => {
-            expect(optionSelectionService.currentSelection.length).toBe(0);
+            let selectedOption: ClrOption;
+            const subscription: Subscription =
+                optionSelectionService.selectionChanged.subscribe((option: ClrOption) => {
+                    selectedOption = option;
+                });
 
             optionSelectionService.updateSelection(fakeOption1);
 
-            expect(optionSelectionService.currentSelection.length).toBe(1);
-            expect(optionSelectionService.currentSelection[0]).toBe(fakeOption1);
+            expect(selectedOption).toBe(fakeOption1);
+
+            subscription.unsubscribe();
         });
 
         it("replaces the current selection with the new selection", () => {
+            let selectedOption: ClrOption;
+            const subscription: Subscription =
+                optionSelectionService.selectionChanged.subscribe((option: ClrOption) => {
+                    selectedOption = option;
+                });
+
             optionSelectionService.updateSelection(fakeOption1);
 
-            expect(optionSelectionService.currentSelection[0]).toBe(fakeOption1);
+            expect(selectedOption).toBe(fakeOption1);
 
             optionSelectionService.updateSelection(fakeOption2);
 
-            expect(optionSelectionService.currentSelection.length).toBe(1);
-            expect(optionSelectionService.currentSelection[0]).toBe(fakeOption2);
+            expect(selectedOption).toBe(fakeOption2);
+
+            subscription.unsubscribe();
         });
 
         it("updates the selected flag of the option when it is selected", () => {

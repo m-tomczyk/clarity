@@ -11,15 +11,18 @@ import {
     ContentChild,
     ElementRef,
     HostListener,
+    OnDestroy,
     PLATFORM_ID,
     Renderer2,
     ViewChild
 } from "@angular/core";
+import {Subscription} from "rxjs";
 
 import {POPOVER_HOST_ANCHOR} from "../../popover/common/popover-host-anchor.token";
 import {IfOpenService} from "../../utils/conditional/if-open.service";
 import {TAB} from "../../utils/key-codes/key-codes";
 
+import {ClrOption} from "./option";
 import {ClrOptions} from "./options";
 import {OptionSelectionService} from "./providers/option-selection.service";
 import {SelectDomAdapter} from "./utils/select-dom-adapter";
@@ -44,9 +47,10 @@ export const selectDomAdapterFactory = (platformId: Object) => {
     ],
     host: {"[class.clr-select]": "true"}
 })
-export class ClrSelect implements AfterContentInit {
+export class ClrSelect implements AfterContentInit, OnDestroy {
     @ViewChild("input") input: ElementRef;
     @ContentChild(ClrOptions) options: ClrOptions;
+    private subscription: Subscription;
 
     constructor(private ifOpenService: IfOpenService, private optionSelectionService: OptionSelectionService,
                 private renderer: Renderer2, private domAdapter: SelectDomAdapter) {
@@ -54,19 +58,17 @@ export class ClrSelect implements AfterContentInit {
     }
 
     private initializeSubscriptions(): void {
-        this.optionSelectionService.selectionChanged.subscribe(() => {
-            this.renderSelection();
+        this.subscription = this.optionSelectionService.selectionChanged.subscribe((option: ClrOption) => {
+            this.renderSelection(option);
         });
     }
 
-    private renderSelection(): void {
-        if (this.input) {
-            this.optionSelectionService.currentSelection.forEach(option => {
-                this.domAdapter.clearChildren(this.input.nativeElement);
-                const clone: HTMLElement = this.domAdapter.cloneNode(option.elRef.nativeElement);
-                this.renderer.setAttribute(clone, "contenteditable", "false");
-                this.renderer.appendChild(this.input.nativeElement, clone);
-            });
+    private renderSelection(selectedOption: ClrOption): void {
+        if (this.input && selectedOption) {
+            this.domAdapter.clearChildren(this.input.nativeElement);
+            const clone: HTMLElement = this.domAdapter.cloneNode(selectedOption.elRef.nativeElement);
+            this.renderer.setAttribute(clone, "contenteditable", "false");
+            this.renderer.appendChild(this.input.nativeElement, clone);
         }
     }
 
@@ -96,5 +98,9 @@ export class ClrSelect implements AfterContentInit {
     // Lifecycle methods
     ngAfterContentInit() {
         this.registerPopoverIgnoredInput();
+    }
+
+    ngOnDestroy() {
+        this.subscription.unsubscribe();
     }
 }

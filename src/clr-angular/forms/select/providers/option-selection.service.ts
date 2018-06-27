@@ -5,32 +5,30 @@
  */
 
 import {Injectable} from "@angular/core";
-import {Subject} from "rxjs";
-import {Observable} from "rxjs/internal/Observable";
+import {Observable, Subject} from "rxjs";
 
 import {ClrOption} from "../option";
 
 @Injectable()
 export class OptionSelectionService {
-    // Array as we need support for selecting multiple options
-    currentSelection: Array<ClrOption> = [];
+    private currentSelection: ClrOption;
 
-    private _selectionChanged: Subject<void> = new Subject<void>();
+    private _selectionChanged: Subject<ClrOption> = new Subject<ClrOption>();
 
-    get selectionChanged(): Observable<void> {
+    get selectionChanged(): Observable<ClrOption> {
         return this._selectionChanged.asObservable();
     }
 
     // Currently only handles single selection
     updateSelection(option: ClrOption): void {
-        if (this.currentSelection.indexOf(option) > -1) {
+        if (this.currentSelection && this.currentSelection === option) {
             return;
         }
-        if (this.currentSelection.length === 1) {
-            this.currentSelection[0].selected = false;
+        if (this.currentSelection) {
+            this.currentSelection.selected = false;
         }
         option.selected = true;
-        this.currentSelection = [option];
-        this._selectionChanged.next();
+        this.currentSelection = option;
+        this._selectionChanged.next(option);
     }
 }
