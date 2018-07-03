@@ -14,9 +14,9 @@ import {OptionSelectionService} from "./option-selection.service";
 
 export default function() {
     describe("Option Selection Service", () => {
-        let optionSelectionService: OptionSelectionService;
-        let fakeOption1: ClrOption;
-        let fakeOption2: ClrOption;
+        let optionSelectionService: OptionSelectionService<string>;
+        let fakeOption1: ClrOption<string>;
+        let fakeOption2: ClrOption<string>;
 
         beforeEach(() => {
             optionSelectionService = new OptionSelectionService();
@@ -24,85 +24,77 @@ export default function() {
             fakeOption2 = new ClrOption(new IfOpenService(), new ElementRef(null), null, optionSelectionService);
         });
 
-        it("updates the selection with the selected option", () => {
-            let selectedOption: ClrOption;
-            const subscription: Subscription =
-                optionSelectionService.selectionChanged.subscribe((option: ClrOption) => {
-                    selectedOption = option;
-                });
+        it("provides an observable to subscribe to change in value", () => {
+            expect(optionSelectionService.valueChanged).toBeDefined();
+        });
 
-            optionSelectionService.updateSelection(fakeOption1);
+        it("provides an observable to notify to render the option", () => {
+            expect(optionSelectionService.renderSelectionChanged).toBeDefined();
+        });
 
-            expect(selectedOption).toBe(fakeOption1);
+        it("notifies that the value has changed", () => {
+            let selectedValue: string;
+            const subscription: Subscription = optionSelectionService.valueChanged.subscribe((value: string) => {
+                selectedValue = value;
+            });
+
+            optionSelectionService.updateSelection("Option 1");
+
+            expect(selectedValue).toBe("Option 1");
+
+            optionSelectionService.updateSelection("Option 2");
+
+            expect(selectedValue).toBe("Option 2");
 
             subscription.unsubscribe();
         });
 
-        it("replaces the current selection with the new selection", () => {
-            let selectedOption: ClrOption;
+        it("notifies that the option has changed", () => {
+            let selectedOption: ClrOption<string>;
             const subscription: Subscription =
-                optionSelectionService.selectionChanged.subscribe((option: ClrOption) => {
+                optionSelectionService.renderSelectionChanged.subscribe((option: ClrOption<string>) => {
                     selectedOption = option;
                 });
 
-            optionSelectionService.updateSelection(fakeOption1);
+            optionSelectionService.renderSelection(fakeOption1);
 
             expect(selectedOption).toBe(fakeOption1);
 
-            optionSelectionService.updateSelection(fakeOption2);
+            optionSelectionService.renderSelection(fakeOption2);
 
             expect(selectedOption).toBe(fakeOption2);
 
             subscription.unsubscribe();
         });
 
-        it("updates the selected flag of the option when it is selected", () => {
-            expect(fakeOption1.selected).toBe(false);
-            expect(fakeOption2.selected).toBe(false);
-
-            optionSelectionService.updateSelection(fakeOption1);
-
-            expect(fakeOption1.selected).toBe(true);
-            expect(fakeOption2.selected).toBe(false);
-
-            optionSelectionService.updateSelection(fakeOption2);
-
-            expect(fakeOption1.selected).toBe(false);
-            expect(fakeOption2.selected).toBe(true);
-        });
-
-        it("provides an observable to subscribe to change in option selection", () => {
-            expect(optionSelectionService.selectionChanged).toBeDefined();
-        });
-
-        it("notifies when a selection has been updated", () => {
+        it("does not notify when the value remains the same", () => {
             let count: number = 0;
-            const sub: Subscription = optionSelectionService.selectionChanged.subscribe(() => {
+            const sub: Subscription = optionSelectionService.valueChanged.subscribe(() => {
                 count++;
             });
 
-            optionSelectionService.updateSelection(fakeOption1);
+            optionSelectionService.updateSelection("Option 1");
 
             expect(count).toBe(1);
 
-            optionSelectionService.updateSelection(fakeOption2);
+            optionSelectionService.updateSelection("Option 1");
 
-            expect(count).toBe(2);
+            expect(count).toBe(1);
 
             sub.unsubscribe();
         });
 
-        it("does not notify when the selected option is selected again", () => {
+        it("does not notify when the selected option remains the same", () => {
             let count: number = 0;
-            const sub: Subscription = optionSelectionService.selectionChanged.subscribe(() => {
+            const sub: Subscription = optionSelectionService.renderSelectionChanged.subscribe(() => {
                 count++;
             });
 
-            optionSelectionService.updateSelection(fakeOption1);
+            optionSelectionService.renderSelection(fakeOption1);
 
             expect(count).toBe(1);
 
-            optionSelectionService.updateSelection(fakeOption1);
+            optionSelectionService.renderSelection(fakeOption1);
 
             expect(count).toBe(1);
 

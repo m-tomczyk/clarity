@@ -4,7 +4,7 @@
  * The full license information can be found in LICENSE in the root directory of this project.
  */
 
-import {Component, ElementRef} from "@angular/core";
+import {Component, ElementRef, ViewChild} from "@angular/core";
 import {TestBed} from "@angular/core/testing";
 
 import {TestContext} from "../../data/datagrid/helpers.spec";
@@ -16,13 +16,14 @@ import {OptionSelectionService} from "./providers/option-selection.service";
 
 @Component({
     template: `
-        <clr-option>
+        <clr-option [clrValue]="'Test'" #option>
             Test
         </clr-option>
     `,
     providers: [IfOpenService, {provide: POPOVER_HOST_ANCHOR, useExisting: ElementRef}, OptionSelectionService]
 })
 class TestComponent {
+    @ViewChild(ClrOption) option;
 }
 
 @Component({
@@ -38,9 +39,9 @@ class TestComponentWithError {
 
 export default function(): void {
     describe("Select Option Component", function() {
-        let context: TestContext<ClrOption, TestComponent>;
+        let context: TestContext<ClrOption<string>, TestComponent>;
         let ifOpenService: IfOpenService;
-        let optionSelectionService: OptionSelectionService;
+        let optionSelectionService: OptionSelectionService<string>;
 
         describe("View Basics", function() {
             beforeEach(function() {
@@ -77,18 +78,19 @@ export default function(): void {
             beforeEach(function() {
                 context = this.create(ClrOption, TestComponent, []);
                 ifOpenService = context.getClarityProvider(IfOpenService);
-                optionSelectionService = context.getClarityProvider(OptionSelectionService);
+                optionSelectionService =
+                    <OptionSelectionService<string>>context.getClarityProvider(OptionSelectionService);
             });
 
-            it("closes the menu when an item is clicked", () => {
-                ifOpenService.open = true;
+            it("calls to render the option when an option is clicked", () => {
+                spyOn(optionSelectionService, "renderSelection");
 
                 context.clarityDirective.updateSelectionAndCloseMenu();
 
-                expect(ifOpenService.open).toBe(false);
+                expect(optionSelectionService.renderSelection).toHaveBeenCalled();
             });
 
-            it("calls to update the selection when an item is clicked", () => {
+            it("calls to update the selection when an option is clicked", () => {
                 spyOn(optionSelectionService, "updateSelection");
 
                 context.clarityDirective.updateSelectionAndCloseMenu();
@@ -96,8 +98,33 @@ export default function(): void {
                 expect(optionSelectionService.updateSelection).toHaveBeenCalled();
             });
 
+            it("closes the menu when an option is clicked", () => {
+                ifOpenService.open = true;
+
+                context.clarityDirective.updateSelectionAndCloseMenu();
+
+                expect(ifOpenService.open).toBe(false);
+            });
+
             it("provides a ref to the ElementRef of the option", () => {
                 expect(context.clarityDirective.elRef).toBeDefined();
+            });
+
+            it("updates the selection when a new value is received", () => {
+                expect(context.testComponent.option.selected).toBe(false);
+
+                optionSelectionService.updateSelection("Test");
+
+                expect(context.testComponent.option.selected).toBe(true);
+
+                // Even if the option is clicked multiple times
+                optionSelectionService.updateSelection("Test");
+
+                expect(context.testComponent.option.selected).toBe(true);
+
+                optionSelectionService.updateSelection("Fake Test");
+
+                expect(context.testComponent.option.selected).toBe(false);
             });
         });
 

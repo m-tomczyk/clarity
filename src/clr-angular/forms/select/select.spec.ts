@@ -24,36 +24,9 @@ import {ClrSelect} from "./select";
 class TestComponent {
 }
 
-@Component({
-    template: `
-        <clr-select>
-            <clr-options class="test">
-                Test
-            </clr-options>
-        </clr-select>
-    `
-})
-class TestSelectWithMenu {
-}
-
-@Component({
-    template: `
-        <clr-select>
-            <clr-option>
-                Option 1
-            </clr-option>
-            <clr-option>
-                Option 2
-            </clr-option>
-        </clr-select>
-    `
-})
-class TestOptionSelection {
-}
-
 export default function(): void {
     describe("Select Component", function() {
-        let context: TestContext<ClrSelect, TestComponent>;
+        let context: TestContext<ClrSelect<string>, TestComponent>;
         let ifOpenService: IfOpenService;
 
         describe("Typescript API", function() {
@@ -175,54 +148,6 @@ export default function(): void {
                 input.dispatchEvent(createKeyboardEvent(TAB, "keydown"));
 
                 expect(context.clarityDirective.closeMenuOnTabPress).toHaveBeenCalled();
-            });
-        });
-
-        describe("Select with Menu", () => {
-            beforeEach(function() {
-                context = this.create(ClrSelect, TestSelectWithMenu, []);
-            });
-
-            it("renders the menu projected by the consumer", () => {
-                const menus = context.clarityElement.querySelectorAll("clr-options");
-                expect(menus.length).toBe(1);
-                expect(menus[0].classList.contains("test")).toBe(true);
-            });
-        });
-
-        describe("Rendering Selected Option", () => {
-            beforeEach(function() {
-                context = this.create(ClrSelect, TestOptionSelection, []);
-            });
-
-            it("renders the selected option in the input when it is clicked", () => {
-                const options = context.clarityElement.querySelectorAll(".clr-option");
-                let input: HTMLElement = context.clarityElement.querySelector(".clr-select-input");
-
-                expect(input.children.length).toBe(0);
-
-                options[0].click();
-
-                input = context.clarityElement.querySelector(".clr-select-input");
-
-                expect(input.textContent).toMatch(/Option 1/);
-            });
-
-            it("clears the previous selection and renders the new selection in the input", () => {
-                const options = context.clarityElement.querySelectorAll(".clr-option");
-                let input: HTMLElement = context.clarityElement.querySelector(".clr-select-input");
-
-                options[0].click();
-
-                expect(input.children.length).toBe(1);
-                expect(input.textContent).toMatch(/Option 1/);
-
-                options[1].click();
-
-                input = context.clarityElement.querySelector(".clr-select-input");
-
-                expect(input.children.length).toBe(1);
-                expect(input.textContent).toMatch(/Option 2/);
             });
         });
     });

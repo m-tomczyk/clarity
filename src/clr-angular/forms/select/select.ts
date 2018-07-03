@@ -47,23 +47,23 @@ export const selectDomAdapterFactory = (platformId: Object) => {
     ],
     host: {"[class.clr-select]": "true"}
 })
-export class ClrSelect implements AfterContentInit, OnDestroy {
+export class ClrSelect<T> implements AfterContentInit, OnDestroy {
     @ViewChild("input") input: ElementRef;
     @ContentChild(ClrOptions) options: ClrOptions;
     private subscription: Subscription;
 
-    constructor(private ifOpenService: IfOpenService, private optionSelectionService: OptionSelectionService,
+    constructor(private ifOpenService: IfOpenService, private optionSelectionService: OptionSelectionService<T>,
                 private renderer: Renderer2, private domAdapter: SelectDomAdapter) {
         this.initializeSubscriptions();
     }
 
     private initializeSubscriptions(): void {
-        this.subscription = this.optionSelectionService.selectionChanged.subscribe((option: ClrOption) => {
+        this.subscription = this.optionSelectionService.renderSelectionChanged.subscribe((option: ClrOption<T>) => {
             this.renderSelection(option);
         });
     }
 
-    private renderSelection(selectedOption: ClrOption): void {
+    private renderSelection(selectedOption: ClrOption<T>): void {
         if (this.input && selectedOption) {
             this.domAdapter.clearChildren(this.input.nativeElement);
             const clone: HTMLElement = this.domAdapter.cloneNode(selectedOption.elRef.nativeElement);

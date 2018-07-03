@@ -10,25 +10,44 @@ import {Observable, Subject} from "rxjs";
 import {ClrOption} from "../option";
 
 @Injectable()
-export class OptionSelectionService {
-    private currentSelection: ClrOption;
+export class OptionSelectionService<T> {
+    private currentValue: T;
+    private currentOption: ClrOption<T>;
 
-    private _selectionChanged: Subject<ClrOption> = new Subject<ClrOption>();
+    private _valueChanged: Subject<T> = new Subject<T>();
 
-    get selectionChanged(): Observable<ClrOption> {
-        return this._selectionChanged.asObservable();
+    // This observable is for notifying the ClrOption to update its
+    // selection by comparing the value
+    get valueChanged(): Observable<T> {
+        return this._valueChanged.asObservable();
     }
 
-    // Currently only handles single selection
-    updateSelection(option: ClrOption): void {
-        if (this.currentSelection && this.currentSelection === option) {
+    // NOTE: Currently only handles single selection
+    // TODO: Add suport for trackBy and compareFn
+    updateSelection(value: T): void {
+        // NOTE: Currently we assume that no 2 options will have the same value
+        // but Eudes and I discussed that this is a possibility but we will handle
+        // this later
+        if (this.currentValue && this.currentValue === value) {
             return;
         }
-        if (this.currentSelection) {
-            this.currentSelection.selected = false;
+        this.currentValue = value;
+        this._valueChanged.next(value);
+    }
+
+    private _renderSelectionChanged: Subject<ClrOption<T>> = new Subject<ClrOption<T>>();
+
+    // This observable is to notify the ClrSelect component to render
+    // a new Option on the Input
+    get renderSelectionChanged(): Observable<ClrOption<T>> {
+        return this._renderSelectionChanged.asObservable();
+    }
+
+    renderSelection(option: ClrOption<T>) {
+        if (this.currentOption === option) {
+            return;
         }
-        option.selected = true;
-        this.currentSelection = option;
-        this._selectionChanged.next(option);
+        this.currentOption = option;
+        this._renderSelectionChanged.next(option);
     }
 }
